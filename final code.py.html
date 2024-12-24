@@ -1,0 +1,165 @@
+<html>
+<head>
+<title>final code.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+final code.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">pandas </span><span class="s0">as </span><span class="s1">pd</span>
+<span class="s0">import </span><span class="s1">streamlit </span><span class="s0">as </span><span class="s1">st</span>
+<span class="s0">from </span><span class="s1">sklearn</span><span class="s2">.</span><span class="s1">neighbors </span><span class="s0">import </span><span class="s1">KNeighborsClassifier</span>
+<span class="s0">from </span><span class="s1">sklearn</span><span class="s2">.</span><span class="s1">ensemble </span><span class="s0">import </span><span class="s1">RandomForestClassifier</span>
+<span class="s0">from </span><span class="s1">sklearn</span><span class="s2">.</span><span class="s1">svm </span><span class="s0">import </span><span class="s1">SVC</span>
+<span class="s0">from </span><span class="s1">sklearn</span><span class="s2">.</span><span class="s1">model_selection </span><span class="s0">import </span><span class="s1">train_test_split</span><span class="s2">, </span><span class="s1">GridSearchCV</span>
+<span class="s0">from </span><span class="s1">sklearn</span><span class="s2">.</span><span class="s1">preprocessing </span><span class="s0">import </span><span class="s1">StandardScaler</span>
+<span class="s0">from </span><span class="s1">sklearn</span><span class="s2">.</span><span class="s1">metrics </span><span class="s0">import </span><span class="s1">accuracy_score</span><span class="s2">, </span><span class="s1">precision_score</span><span class="s2">, </span><span class="s1">f1_score</span>
+
+<span class="s3"># Streamlit App</span>
+<span class="s1">st</span><span class="s2">.</span><span class="s1">title</span><span class="s2">(</span><span class="s4">&quot;Heart Disease Prediction App&quot;</span><span class="s2">)</span>
+
+<span class="s3"># File uploader</span>
+<span class="s1">uploaded_file </span><span class="s2">= </span><span class="s1">st</span><span class="s2">.</span><span class="s1">file_uploader</span><span class="s2">(</span><span class="s4">&quot;Upload your dataset&quot;</span><span class="s2">, </span><span class="s1">type</span><span class="s2">=[</span><span class="s4">&quot;csv&quot;</span><span class="s2">])</span>
+<span class="s0">if </span><span class="s1">uploaded_file</span><span class="s2">:</span>
+    <span class="s3"># Read the CSV file</span>
+    <span class="s0">try</span><span class="s2">:</span>
+        <span class="s1">data </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">read_csv</span><span class="s2">(</span><span class="s1">uploaded_file</span><span class="s2">)</span>
+        <span class="s1">st</span><span class="s2">.</span><span class="s1">write</span><span class="s2">(</span><span class="s4">&quot;Dataset Preview:&quot;</span><span class="s2">)</span>
+        <span class="s1">st</span><span class="s2">.</span><span class="s1">write</span><span class="s2">(</span><span class="s1">data</span><span class="s2">.</span><span class="s1">head</span><span class="s2">())</span>
+
+        <span class="s3"># Check for target column</span>
+        <span class="s0">if </span><span class="s4">&quot;Severity&quot; </span><span class="s0">not in </span><span class="s1">data</span><span class="s2">.</span><span class="s1">columns</span><span class="s2">:</span>
+            <span class="s1">st</span><span class="s2">.</span><span class="s1">error</span><span class="s2">(</span><span class="s4">&quot;The dataset must contain a 'Severity' column.&quot;</span><span class="s2">)</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s3"># Prepare data</span>
+            <span class="s1">x </span><span class="s2">= </span><span class="s1">data</span><span class="s2">.</span><span class="s1">drop</span><span class="s2">(</span><span class="s1">columns</span><span class="s2">=[</span><span class="s4">&quot;Severity&quot;</span><span class="s2">], </span><span class="s1">axis</span><span class="s2">=</span><span class="s5">1</span><span class="s2">)</span>
+            <span class="s1">y </span><span class="s2">= </span><span class="s1">data</span><span class="s2">[</span><span class="s4">&quot;Severity&quot;</span><span class="s2">]</span>
+
+            <span class="s3"># Split dataset</span>
+            <span class="s1">X_train</span><span class="s2">, </span><span class="s1">X_test</span><span class="s2">, </span><span class="s1">y_train</span><span class="s2">, </span><span class="s1">y_test </span><span class="s2">= </span><span class="s1">train_test_split</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">test_size</span><span class="s2">=</span><span class="s5">0.2</span><span class="s2">, </span><span class="s1">random_state</span><span class="s2">=</span><span class="s5">42</span><span class="s2">)</span>
+
+            <span class="s3"># Scaling</span>
+            <span class="s1">scaler </span><span class="s2">= </span><span class="s1">StandardScaler</span><span class="s2">()</span>
+            <span class="s1">X_train_scaled </span><span class="s2">= </span><span class="s1">scaler</span><span class="s2">.</span><span class="s1">fit_transform</span><span class="s2">(</span><span class="s1">X_train</span><span class="s2">)</span>
+            <span class="s1">X_test_scaled </span><span class="s2">= </span><span class="s1">scaler</span><span class="s2">.</span><span class="s1">transform</span><span class="s2">(</span><span class="s1">X_test</span><span class="s2">)</span>
+
+            <span class="s3"># Model selection</span>
+            <span class="s1">model_choice </span><span class="s2">= </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Select a model&quot;</span><span class="s2">, [</span><span class="s4">&quot;KNeighborsClassifier&quot;</span><span class="s2">, </span><span class="s4">&quot;RandomForestClassifier&quot;</span><span class="s2">, </span><span class="s4">&quot;SVC&quot;</span><span class="s2">])</span>
+
+            <span class="s3"># Define models and hyperparameters</span>
+            <span class="s1">models </span><span class="s2">= {</span>
+                <span class="s4">&quot;KNeighborsClassifier&quot;</span><span class="s2">: {</span>
+                    <span class="s4">&quot;model&quot;</span><span class="s2">: </span><span class="s1">KNeighborsClassifier</span><span class="s2">(),</span>
+                    <span class="s4">&quot;parameters&quot;</span><span class="s2">: {</span>
+                        <span class="s4">&quot;n_neighbors&quot;</span><span class="s2">: [</span><span class="s5">1</span><span class="s2">, </span><span class="s5">3</span><span class="s2">, </span><span class="s5">5</span><span class="s2">],</span>
+                        <span class="s4">&quot;weights&quot;</span><span class="s2">: [</span><span class="s4">&quot;uniform&quot;</span><span class="s2">, </span><span class="s4">&quot;distance&quot;</span><span class="s2">],</span>
+                        <span class="s4">&quot;p&quot;</span><span class="s2">: [</span><span class="s5">1</span><span class="s2">, </span><span class="s5">2</span><span class="s2">],</span>
+                    <span class="s2">},</span>
+                    <span class="s4">&quot;scale&quot;</span><span class="s2">: </span><span class="s0">False</span><span class="s2">,</span>
+                <span class="s2">},</span>
+                <span class="s4">&quot;RandomForestClassifier&quot;</span><span class="s2">: {</span>
+                    <span class="s4">&quot;model&quot;</span><span class="s2">: </span><span class="s1">RandomForestClassifier</span><span class="s2">(),</span>
+                    <span class="s4">&quot;parameters&quot;</span><span class="s2">: {</span>
+                        <span class="s4">&quot;n_estimators&quot;</span><span class="s2">: [</span><span class="s5">50</span><span class="s2">, </span><span class="s5">100</span><span class="s2">, </span><span class="s5">200</span><span class="s2">],</span>
+                        <span class="s4">&quot;criterion&quot;</span><span class="s2">: [</span><span class="s4">&quot;entropy&quot;</span><span class="s2">, </span><span class="s4">&quot;gini&quot;</span><span class="s2">],</span>
+                    <span class="s2">},</span>
+                    <span class="s4">&quot;scale&quot;</span><span class="s2">: </span><span class="s0">False</span><span class="s2">,</span>
+                <span class="s2">},</span>
+                <span class="s4">&quot;SVC&quot;</span><span class="s2">: {</span>
+                    <span class="s4">&quot;model&quot;</span><span class="s2">: </span><span class="s1">SVC</span><span class="s2">(</span><span class="s1">class_weight</span><span class="s2">=</span><span class="s4">&quot;balanced&quot;</span><span class="s2">),</span>
+                    <span class="s4">&quot;parameters&quot;</span><span class="s2">: {</span>
+                        <span class="s4">&quot;C&quot;</span><span class="s2">: [</span><span class="s5">0.1</span><span class="s2">, </span><span class="s5">1</span><span class="s2">, </span><span class="s5">10</span><span class="s2">],</span>
+                        <span class="s4">&quot;kernel&quot;</span><span class="s2">: [</span><span class="s4">&quot;linear&quot;</span><span class="s2">, </span><span class="s4">&quot;rbf&quot;</span><span class="s2">],</span>
+                        <span class="s4">&quot;gamma&quot;</span><span class="s2">: [</span><span class="s5">0.01</span><span class="s2">, </span><span class="s5">0.1</span><span class="s2">, </span><span class="s5">1</span><span class="s2">],</span>
+                    <span class="s2">},</span>
+                    <span class="s4">&quot;scale&quot;</span><span class="s2">: </span><span class="s0">True</span><span class="s2">,</span>
+                <span class="s2">},</span>
+            <span class="s2">}</span>
+
+            <span class="s1">selected_model </span><span class="s2">= </span><span class="s1">models</span><span class="s2">[</span><span class="s1">model_choice</span><span class="s2">]</span>
+
+            <span class="s3"># Use scaled or unscaled data</span>
+            <span class="s1">X_train_to_use </span><span class="s2">= </span><span class="s1">X_train_scaled </span><span class="s0">if </span><span class="s1">selected_model</span><span class="s2">[</span><span class="s4">&quot;scale&quot;</span><span class="s2">] </span><span class="s0">else </span><span class="s1">X_train</span>
+            <span class="s1">X_test_to_use </span><span class="s2">= </span><span class="s1">X_test_scaled </span><span class="s0">if </span><span class="s1">selected_model</span><span class="s2">[</span><span class="s4">&quot;scale&quot;</span><span class="s2">] </span><span class="s0">else </span><span class="s1">X_test</span>
+
+            <span class="s3"># Hyperparameter tuning</span>
+            <span class="s1">st</span><span class="s2">.</span><span class="s1">write</span><span class="s2">(</span><span class="s4">&quot;Tuning hyperparameters...&quot;</span><span class="s2">)</span>
+            <span class="s1">search </span><span class="s2">= </span><span class="s1">GridSearchCV</span><span class="s2">(</span><span class="s1">estimator</span><span class="s2">=</span><span class="s1">selected_model</span><span class="s2">[</span><span class="s4">&quot;model&quot;</span><span class="s2">], </span><span class="s1">param_grid</span><span class="s2">=</span><span class="s1">selected_model</span><span class="s2">[</span><span class="s4">&quot;parameters&quot;</span><span class="s2">], </span><span class="s1">cv</span><span class="s2">=</span><span class="s5">5</span><span class="s2">)</span>
+            <span class="s1">search</span><span class="s2">.</span><span class="s1">fit</span><span class="s2">(</span><span class="s1">X_train_to_use</span><span class="s2">, </span><span class="s1">y_train</span><span class="s2">)</span>
+
+            <span class="s3"># Evaluation</span>
+            <span class="s1">predictions </span><span class="s2">= </span><span class="s1">search</span><span class="s2">.</span><span class="s1">predict</span><span class="s2">(</span><span class="s1">X_test_to_use</span><span class="s2">)</span>
+            <span class="s1">accuracy </span><span class="s2">= </span><span class="s1">accuracy_score</span><span class="s2">(</span><span class="s1">y_test</span><span class="s2">, </span><span class="s1">predictions</span><span class="s2">)</span>
+            <span class="s1">precision </span><span class="s2">= </span><span class="s1">precision_score</span><span class="s2">(</span><span class="s1">y_test</span><span class="s2">, </span><span class="s1">predictions</span><span class="s2">, </span><span class="s1">average</span><span class="s2">=</span><span class="s4">&quot;weighted&quot;</span><span class="s2">)</span>
+            <span class="s1">f1 </span><span class="s2">= </span><span class="s1">f1_score</span><span class="s2">(</span><span class="s1">y_test</span><span class="s2">, </span><span class="s1">predictions</span><span class="s2">, </span><span class="s1">average</span><span class="s2">=</span><span class="s4">&quot;weighted&quot;</span><span class="s2">)</span>
+
+            <span class="s1">st</span><span class="s2">.</span><span class="s1">write</span><span class="s2">(</span><span class="s4">f&quot;Best Parameters: </span><span class="s0">{</span><span class="s1">search</span><span class="s2">.</span><span class="s1">best_params_</span><span class="s0">}</span><span class="s4">&quot;</span><span class="s2">)</span>
+            <span class="s1">st</span><span class="s2">.</span><span class="s1">write</span><span class="s2">(</span><span class="s4">f&quot;Accuracy: </span><span class="s0">{</span><span class="s1">accuracy</span><span class="s0">:</span><span class="s4">.2f</span><span class="s0">}</span><span class="s4">&quot;</span><span class="s2">)</span>
+            <span class="s1">st</span><span class="s2">.</span><span class="s1">write</span><span class="s2">(</span><span class="s4">f&quot;Precision: </span><span class="s0">{</span><span class="s1">precision</span><span class="s0">:</span><span class="s4">.2f</span><span class="s0">}</span><span class="s4">&quot;</span><span class="s2">)</span>
+            <span class="s1">st</span><span class="s2">.</span><span class="s1">write</span><span class="s2">(</span><span class="s4">f&quot;F1 Score: </span><span class="s0">{</span><span class="s1">f1</span><span class="s0">:</span><span class="s4">.2f</span><span class="s0">}</span><span class="s4">&quot;</span><span class="s2">)</span>
+
+            <span class="s3"># Real-time prediction form</span>
+            <span class="s1">st</span><span class="s2">.</span><span class="s1">write</span><span class="s2">(</span><span class="s4">&quot;### Predict on a single instance&quot;</span><span class="s2">)</span>
+            <span class="s1">st</span><span class="s2">.</span><span class="s1">write</span><span class="s2">(</span><span class="s4">&quot;Fill in the details below:&quot;</span><span class="s2">)</span>
+
+            <span class="s3"># Input form for user features</span>
+            <span class="s1">input_data </span><span class="s2">= {</span>
+                <span class="s4">&quot;Age&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">number_input</span><span class="s2">(</span><span class="s4">&quot;Age&quot;</span><span class="s2">, </span><span class="s1">min_value</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">max_value</span><span class="s2">=</span><span class="s5">120</span><span class="s2">, </span><span class="s1">value</span><span class="s2">=</span><span class="s5">30</span><span class="s2">),</span>
+                <span class="s4">&quot;Female&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Female&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;Male&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Male&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;Cholesterol&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">number_input</span><span class="s2">(</span><span class="s4">&quot;Cholesterol&quot;</span><span class="s2">, </span><span class="s1">min_value</span><span class="s2">=</span><span class="s5">0.0</span><span class="s2">, </span><span class="s1">value</span><span class="s2">=</span><span class="s5">200.0</span><span class="s2">),</span>
+                <span class="s4">&quot;Rest BP&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">number_input</span><span class="s2">(</span><span class="s4">&quot;Rest BP&quot;</span><span class="s2">, </span><span class="s1">min_value</span><span class="s2">=</span><span class="s5">0.0</span><span class="s2">, </span><span class="s1">value</span><span class="s2">=</span><span class="s5">120.0</span><span class="s2">),</span>
+                <span class="s4">&quot;Exercise Heart Rate&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">number_input</span><span class="s2">(</span><span class="s4">&quot;Exercise Heart Rate&quot;</span><span class="s2">, </span><span class="s1">min_value</span><span class="s2">=</span><span class="s5">0.0</span><span class="s2">, </span><span class="s1">value</span><span class="s2">=</span><span class="s5">150.0</span><span class="s2">),</span>
+                <span class="s4">&quot;Old Peak&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">number_input</span><span class="s2">(</span><span class="s4">&quot;Old Peak&quot;</span><span class="s2">, </span><span class="s1">min_value</span><span class="s2">=</span><span class="s5">0.0</span><span class="s2">, </span><span class="s1">value</span><span class="s2">=</span><span class="s5">1.0</span><span class="s2">),</span>
+                <span class="s4">&quot;FBS&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Fasting Blood Sugar (FBS)&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;EI Angina&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Exercise Induced Angina&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;CA&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">number_input</span><span class="s2">(</span><span class="s4">&quot;CA (Number of major vessels colored)&quot;</span><span class="s2">, </span><span class="s1">min_value</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">max_value</span><span class="s2">=</span><span class="s5">4</span><span class="s2">, </span><span class="s1">value</span><span class="s2">=</span><span class="s5">0</span><span class="s2">),</span>
+                <span class="s4">&quot;Asymptomatic&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Asymptomatic&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;Atypical Angina&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Atypical Angina&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;Non-Anginal&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Non-Anginal Pain&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;Typical Angina&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Typical Angina&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;LV Hypertrophy&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Left Ventricular Hypertrophy&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;Normal (ECG)&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Normal ECG&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;ST-T Abnormality&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;ST-T Abnormality&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;Downsloping&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Downsloping&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;Flat&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Flat&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;Upsloping&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Upsloping&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;Fixed Defect&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Fixed Defect&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;Normal (Thal)&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Normal (Thal)&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+                <span class="s4">&quot;Reversable Defect&quot;</span><span class="s2">: </span><span class="s1">st</span><span class="s2">.</span><span class="s1">selectbox</span><span class="s2">(</span><span class="s4">&quot;Reversable Defect&quot;</span><span class="s2">, [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]),</span>
+            <span class="s2">}</span>
+
+            <span class="s3"># Create DataFrame for input</span>
+            <span class="s1">input_df </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">DataFrame</span><span class="s2">([</span><span class="s1">input_data</span><span class="s2">])</span>
+
+            <span class="s3"># Scale input if required</span>
+            <span class="s1">single_instance_scaled </span><span class="s2">= </span><span class="s1">scaler</span><span class="s2">.</span><span class="s1">transform</span><span class="s2">(</span><span class="s1">input_df</span><span class="s2">) </span><span class="s0">if </span><span class="s1">selected_model</span><span class="s2">[</span><span class="s4">&quot;scale&quot;</span><span class="s2">] </span><span class="s0">else </span><span class="s1">input_df</span>
+            <span class="s1">single_prediction </span><span class="s2">= </span><span class="s1">search</span><span class="s2">.</span><span class="s1">predict</span><span class="s2">(</span><span class="s1">single_instance_scaled</span><span class="s2">)</span>
+
+            <span class="s3"># Interpret prediction</span>
+            <span class="s1">st</span><span class="s2">.</span><span class="s1">write</span><span class="s2">(</span><span class="s4">f&quot;Prediction for the input instance: </span><span class="s0">{</span><span class="s1">single_prediction</span><span class="s2">[</span><span class="s5">0</span><span class="s2">]</span><span class="s0">}</span><span class="s4">&quot;</span><span class="s2">)</span>
+            <span class="s1">severity_map </span><span class="s2">= {</span>
+                <span class="s5">0</span><span class="s2">: </span><span class="s4">&quot;You may have no heart disease&quot;</span><span class="s2">,</span>
+                <span class="s5">1</span><span class="s2">: </span><span class="s4">&quot;You may have mild heart disease&quot;</span><span class="s2">,</span>
+                <span class="s5">2</span><span class="s2">: </span><span class="s4">&quot;You may have moderate heart disease&quot;</span><span class="s2">,</span>
+                <span class="s5">3</span><span class="s2">: </span><span class="s4">&quot;You may have severe heart disease&quot;</span><span class="s2">,</span>
+                <span class="s5">4</span><span class="s2">: </span><span class="s4">&quot;You may be in advanced stage&quot;</span><span class="s2">,</span>
+            <span class="s2">}</span>
+            <span class="s1">st</span><span class="s2">.</span><span class="s1">write</span><span class="s2">(</span><span class="s1">severity_map</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s1">single_prediction</span><span class="s2">[</span><span class="s5">0</span><span class="s2">], </span><span class="s4">&quot;Unknown severity level&quot;</span><span class="s2">))</span>
+
+    <span class="s0">except </span><span class="s1">Exception </span><span class="s0">as </span><span class="s1">e</span><span class="s2">:</span>
+        <span class="s1">st</span><span class="s2">.</span><span class="s1">error</span><span class="s2">(</span><span class="s4">f&quot;An error occurred: </span><span class="s0">{</span><span class="s1">e</span><span class="s0">}</span><span class="s4">&quot;</span><span class="s2">)</span>
+</pre>
+</body>
+</html>
